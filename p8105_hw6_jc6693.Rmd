@@ -65,8 +65,23 @@ different cities have different result and most cities' estimate OR is less than
 
 ## Problem 2
 
+```{r}
+library(p8105.datasets)
+data("weather_df")
+weather_df = weather_df |>
+  select(tmax,tmin,prcp) |>
+  drop_na()
+```
 
+```{r}
+boot_sample = function(df) {sample_frac(df, replace = TRUE)}
+```
 
+```{r}
+boot_straps = 
+  tibble(strap_number = 1:5000) |> 
+  mutate(strap_sample = map(strap_number, \(i) boot_sample(df = weather_df)))
+```
 
 
 
