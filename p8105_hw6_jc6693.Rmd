@@ -120,9 +120,30 @@ CI_table
 
 ## Problem 3
 
+```{r}
+library(modelr)
+```
 
 
+```{r}
+birthweight_df = read_csv('data/birthweight.csv') |>
+  drop_na() |>
+  mutate(babysex = factor(babysex, levels = c(1,2), labels = c("Male","Female")))
+```
+considering using mother's weight(ppwt) and weight gained (wtgain) and baby's sex(babysex) to predict birthweight(bwt).
 
+```{r}
+model1 = lm(bwt ~ ppwt + wtgain + babysex, data = birthweight_df)
+summary(model1)
+```
+
+```{r}
+model1_plot = birthweight_df |>
+  add_predictions(model1) |>
+  add_residuals(model1) |>
+  ggplot(aes(x = pred, y = resid)) + geom_point()
+model1_plot
+```
 
 
 
