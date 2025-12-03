@@ -8,6 +8,8 @@ output: github_document
 
 ```{r}
 library(tidyverse)
+library(purrr)
+library(broom)
 ```
 
 
@@ -35,11 +37,33 @@ Baltimore_MD_victim_sexMale
 
 estimate is 0.426 and confidence interval is (0.324,0.558)
 
+For all cities
 
+```{r}
+result1 = homicide_df |>
+  mutate(resolved = !unsolved) |>
+  filter(victim_sex != 'Unknown') |>
+  group_by(city_state) |>
+  nest() |>
+  mutate(model = map(data, ~ glm(resolved ~ victim_age + victim_sex + victim_race, data = .x, family = binomial()))) |>
+  mutate(tidied = map(model, ~ tidy(.x, conf.int = TRUE, exponentiate = TRUE))) |>
+  unnest(tidied) |>
+  select(-model,-data) |>
+  filter(term == 'victim_sexMale') |>
+  select(city_state, estimate, conf.low, conf.high)
+result1
+```
 
+```{r}
+result1_plot = result1 |>
+  arrange(estimate) |>
+  ggplot(aes(x = fct_reorder(city_state, estimate), y = estimate)) + geom_point() + geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) + geom_hline(yintercept = 1) + coord_flip()
+result1_plot
+```
 
+different cities have different result and most cities' estimate OR is less than 1. For cities whose OR is more than 1, its CI include 1, which means there is no significant difference between sex. But some cities like New York, we can see significant lower resolved case rate in women. 
 
-
+## Problem 2
 
 
 
