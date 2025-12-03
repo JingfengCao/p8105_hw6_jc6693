@@ -1,0 +1,50 @@
+---
+title: 'P8105 HW6'
+author: 'Jingfeng Cao'
+output: github_document
+---
+
+## Problem 1
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+homicide_df = read_csv('data/homicide-data.csv') |>
+  mutate(city_state = paste(city, state, sep = ','), unsolved = disposition %in% c('Closed without arrest', 'Open/No arrest')) |>
+  filter(!city_state %in% c('Dallas,TX', 'Phoenix,AZ', 'Kansas City,MO', 'Tulsa,AL')) |>
+  filter(victim_race %in% c('White', 'Black')) |>
+  mutate(victim_age = as.numeric(victim_age))
+```
+
+for Baltimore, MD
+
+```{r}
+Baltimore_MD = homicide_df |>
+  filter(city_state == 'Baltimore,MD') |>
+  mutate(resolved = !unsolved) |>
+  glm(resolved ~ victim_age + victim_sex + victim_race, data = _, family = binomial()) |>
+  broom::tidy(conf.int = TRUE, exponentiate = TRUE)
+Baltimore_MD
+Baltimore_MD_victim_sexMale = Baltimore_MD |>
+  filter(term == 'victim_sexMale')
+Baltimore_MD_victim_sexMale
+```
+
+estimate is 0.426 and confidence interval is (0.324,0.558)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
