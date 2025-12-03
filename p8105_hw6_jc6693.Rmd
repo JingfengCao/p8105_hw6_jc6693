@@ -80,8 +80,48 @@ boot_sample = function(df) {sample_frac(df, replace = TRUE)}
 ```{r}
 boot_straps = 
   tibble(strap_number = 1:5000) |> 
-  mutate(strap_sample = map(strap_number, \(i) boot_sample(df = weather_df)))
+  mutate(strap_sample = map(strap_number, \(i) boot_sample(df = weather_df)), results = map(strap_sample, \(x) lm(tmax ~ tmin + prcp, data = x)))
 ```
+
+```{r}
+boot_result = boot_straps |>
+  select(-strap_sample) |>
+  mutate(r2 = map_dbl(results, \(x) glance(x)$r.squared), tidy = map(results, \(x) tidy(x))) |>
+  select(-results) |>
+  mutate(beta_de = map_dbl(tidy, \(x) {
+    b1 = x$estimate[x$term == 'tmin']
+    b2 = x$estimate[x$term == 'prcp']
+    b1 / b2})) |>
+  select(-tidy)
+```
+
+```{r}
+r2_plot = boot_result |> 
+  ggplot(aes(x = r2)) + geom_density()
+r2_plot
+```
+
+It is approximately bell-shaped with slightly left skewed tail, and almost all r^2 is more than 0.93.
+
+```{r}
+beta_plot = boot_result |>
+  ggplot(aes(x = beta_de)) + geom_density()
+beta_plot
+```
+
+It has a left tail, and the peak is at about -160. 
+
+```{r}
+CI_table = boot_result |>
+  summarize(r2_low = quantile(r2, 0.025), r2_high = quantile(r2, 0.975), beta_low = quantile(beta_de, 0.025), beta_high = quantile(beta_de, 0.975)) |>
+  knitr::kable()
+CI_table
+```
+
+## Problem 3
+
+
+
 
 
 
